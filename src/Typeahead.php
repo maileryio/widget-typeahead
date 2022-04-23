@@ -11,7 +11,6 @@ use Yiisoft\Form\Widget\Validator\HasLengthInterface;
 use Yiisoft\Form\Widget\Validator\RegexInterface;
 use Yiisoft\Html\Html;
 use Mailery\Assets\AssetBundleRegistry;
-use Mailery\Widget\Typeahead\RbacAssetBundle;
 
 class Typeahead extends InputAttributes implements HasLengthInterface, RegexInterface, PlaceholderInterface
 {
@@ -94,7 +93,7 @@ class Typeahead extends InputAttributes implements HasLengthInterface, RegexInte
      */
     protected function run(): string
     {
-        $this->assetBundleRegistry->add(RbacAssetBundle::class);
+        $this->assetBundleRegistry->add(TypeaheadAssetBundle::class);
 
         $attributes = $this->build($this->attributes);
 

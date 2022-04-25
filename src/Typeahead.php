@@ -105,7 +105,7 @@ class Typeahead extends InputAttributes implements HasLengthInterface, RegexInte
         }
 
         $attributes['type'] = $attributes['type'] ?? 'text';
-        $attributes['classname'] = $attributes['class'] ?? '';
+        $attributes['class-name'] = $attributes['class'] ?? '';
 
         unset($attributes['class']);
 

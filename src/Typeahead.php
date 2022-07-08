@@ -4,22 +4,28 @@ declare(strict_types=1);
 
 namespace Mailery\Widget\Typeahead;
 
-use InvalidArgumentException;
-use Yiisoft\Form\Widget\Attribute\InputAttributes;
-use Yiisoft\Form\Widget\Attribute\PlaceholderInterface;
-use Yiisoft\Form\Widget\Validator\HasLengthInterface;
-use Yiisoft\Form\Widget\Validator\RegexInterface;
+use Yiisoft\Assets\AssetManager;
 use Yiisoft\Html\Html;
-use Mailery\Assets\AssetBundleRegistry;
+use Yiisoft\Form\Field\Base\InputField;
+use Yiisoft\Form\Field\Base\EnrichmentFromRules\EnrichmentFromRulesTrait;
+use Yiisoft\Form\Field\Base\EnrichmentFromRules\EnrichmentFromRulesInterface;
+use Yiisoft\Form\Field\Base\ValidationClass\ValidationClassTrait;
+use Yiisoft\Form\Field\Base\ValidationClass\ValidationClassInterface;
+use Yiisoft\Form\Field\Base\Placeholder\PlaceholderInterface;
+use Yiisoft\Form\Field\Base\Placeholder\PlaceholderTrait;
 
-class Typeahead extends InputAttributes implements HasLengthInterface, RegexInterface, PlaceholderInterface
+class Typeahead extends InputField implements EnrichmentFromRulesInterface, ValidationClassInterface, PlaceholderInterface
 {
 
+    use EnrichmentFromRulesTrait;
+    use ValidationClassTrait;
+    use PlaceholderTrait;
+
     /**
-     * @param AssetBundleRegistry $assetBundleRegistry
+     * @param AssetManager $assetManager
      */
     public function __construct(
-        private AssetBundleRegistry $assetBundleRegistry
+        private AssetManager $assetManager
     ) {}
 
     /**
@@ -29,7 +35,7 @@ class Typeahead extends InputAttributes implements HasLengthInterface, RegexInte
     public function maxlength(int $value): self
     {
         $new = clone $this;
-        $new->attributes['maxlength'] = $value;
+        $new->inputAttributes['maxlength'] = $value;
         return $new;
     }
 
@@ -40,7 +46,7 @@ class Typeahead extends InputAttributes implements HasLengthInterface, RegexInte
     public function minlength(int $value): self
     {
         $new = clone $this;
-        $new->attributes['minlength'] = $value;
+        $new->inputAttributes['minlength'] = $value;
         return $new;
     }
 
@@ -51,18 +57,7 @@ class Typeahead extends InputAttributes implements HasLengthInterface, RegexInte
     public function pattern(string $value): self
     {
         $new = clone $this;
-        $new->attributes['pattern'] = $value;
-        return $new;
-    }
-
-    /**
-     * @param string $value
-     * @return self
-     */
-    public function placeholder(string $value): self
-    {
-        $new = clone $this;
-        $new->attributes['placeholder'] = $value;
+        $new->inputAttributes['pattern'] = $value;
         return $new;
     }
 
@@ -73,7 +68,7 @@ class Typeahead extends InputAttributes implements HasLengthInterface, RegexInte
     public function url(string $value): self
     {
         $new = clone $this;
-        $new->attributes['url'] = $value;
+        $new->inputAttributes['url'] = $value;
         return $new;
     }
 
@@ -84,29 +79,28 @@ class Typeahead extends InputAttributes implements HasLengthInterface, RegexInte
     public function type(string $value): self
     {
         $new = clone $this;
-        $new->attributes['type'] = $value;
+        $new->inputAttributes['type'] = $value;
         return $new;
     }
 
     /**
      * @inheritdoc
      */
-    protected function run(): string
+    protected function generateInput(): string
     {
-        $this->assetBundleRegistry->add(TypeaheadAssetBundle::class);
+        $this->assetManager->register(TypeaheadAssetBundle::class);
 
-        $attributes = $this->build($this->attributes);
+        $attributes = $this->getInputAttributes();
 
-        /** @link https://www.w3.org/TR/2012/WD-html-markup-20120329/input.text.html#input.text.attrs.value */
-        $attributes['value'] = $attributes['value'] ?? $this->getAttributeValue();
+        $attributes['value'] ??= $this->getFormAttributeValue();
 
         if (null !== $attributes['value'] && !is_string($attributes['value'])) {
-            throw new InvalidArgumentException('Text widget must be a string or null value.');
+            throw new \InvalidArgumentException('Typeahead value must be a string or null value.');
         }
 
-        $attributes['type'] = $attributes['type'] ?? 'text';
-        $attributes['class-name'] = $attributes['class'] ?? '';
-
+        $attributes['type'] ??= 'text';
+        $attributes['name'] ??= $this->getInputName();
+        $attributes['class-name'] = implode(' ', $attributes['class'] ?? '');
         unset($attributes['class']);
 
         return Html::tag('ui-typeahead', '', $attributes)->render();
